@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comparador Salarial</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f5f5f5;
+      color: #333;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    header {
+      background-color: #2c3e50;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .comparison-table thead th {
+      background-color: #ecf0f1;
+      padding: 12px 16px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-bottom: 2px solid #bdc3c7;
+    }
+
+    .comparison-table thead th:first-child {
+      text-align: left;
+      width: 35%;
+    }
+
+    .comparison-table thead th:nth-child(2),
+    .comparison-table thead th:nth-child(3) {
+      width: 30%;
+    }
+
+    .comparison-table thead th:last-child {
+      width: 5%;
+    }
+
+    .comparison-table tbody tr {
+      border-bottom: 1px solid #ecf0f1;
+    }
+
+    .comparison-table tbody tr:hover {
+      background-color: #f9f9f9;
+    }
+
+    .comparison-table tbody td {
+      padding: 10px 16px;
+      vertical-align: middle;
+    }
+
+    .comparison-table tbody td:first-child {
+      font-weight: 500;
+    }
+
+    .comparison-table input[type="text"],
+    .comparison-table input[type="number"] {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      text-align: right;
+      transition: border-color 0.2s;
+    }
+
+    .comparison-table input[type="text"]:focus,
+    .comparison-table input[type="number"]:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    }
+
+    .comparison-table .item-name-input {
+      text-align: left;
+      font-weight: 500;
+    }
+
+    .btn-remove {
+      background: none;
+      border: none;
+      color: #e74c3c;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+
+    .btn-remove:hover {
+      background-color: #fdeaea;
+    }
+
+    .totals-row {
+      background-color: #f8f9fa;
+      border-top: 2px solid #2c3e50;
+    }
+
+    .totals-row td {
+      padding: 14px 16px;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .totals-row td:nth-child(2),
+    .totals-row td:nth-child(3) {
+      text-align: right;
+      color: #2c3e50;
+    }
+
+    .add-item-section {
+      padding: 16px;
+      text-align: center;
+      border-top: 1px solid #ecf0f1;
+    }
+
+    #add-item-btn {
+      background-color: #3498db;
+      color: #fff;
+      border: none;
+      padding: 10px 24px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    #add-item-btn:hover {
+      background-color: #2980b9;
+    }
+
+    #add-item-btn:active {
+      background-color: #1f6fa5;
+    }
+
+    /* Responsivo */
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+
+      .comparison-table thead th,
+      .comparison-table tbody td {
+        padding: 8px;
+        font-size: 0.85rem;
+      }
+
+      .comparison-table input[type="text"],
+      .comparison-table input[type="number"] {
+        padding: 6px 8px;
+        font-size: 0.85rem;
+      }
+
+      header h1 {
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>Comparador Salarial</h1>
+    </header>
+
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Emprego Atual</th>
+          <th>Proposta</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="items-container">
+        <!-- Itens de compensação serão renderizados aqui via JavaScript -->
+      </tbody>
+      <tfoot>
+        <tr class="totals-row">
+          <td>TOTAL</td>
+          <td><span id="total-current">R$ 0,00</span></td>
+          <td><span id="total-offer">R$ 0,00</span></td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="add-item-section">
+      <button id="add-item-btn" type="button">+ Adicionar Item</button>
+    </div>
+  </main>
+
+  <script>
+    // ===== Data Model =====
+
+    const PREDEFINED_ITEMS = [
+      { id: 'salario', name: 'Salário', isPredefined: true },
+      { id: 'va-vr', name: 'Vale Alimentação/Refeição', isPredefined: true },
+      { id: 'plano-saude', name: 'Plano de Saúde', isPredefined: true },
+      { id: 'plr', name: 'PLR', isPredefined: true },
+      { id: 'vale-transporte', name: 'Vale Transporte', isPredefined: true },
+      { id: 'bonus', name: 'Bônus', isPredefined: true },
+    ];
+
+    /**
+     * Inicializa o modelo com os itens pré-definidos, valores zerados.
+     * @returns {CompensationItem[]}
+     */
+    function createInitialModel() {
+      return PREDEFINED_ITEMS.map(item => ({
+        ...item,
+        currentValue: 0,
+        offerValue: 0,
+      }));
+    }
+
+    /** @type {CompensationItem[]} */
+    let state = createInitialModel();
+
+    // ===== Totalizer =====
+
+    /**
+     * Calcula a soma dos valores para cada coluna.
+     * Valores não numéricos ou vazios são tratados como 0.
+     * @param {CompensationItem[]} items
+     * @returns {{ currentTotal: number, offerTotal: number }}
+     */
+    function calculateTotals(items) {
+      const currentTotal = items.reduce((sum, item) => sum + (Number(item.currentValue) || 0), 0);
+      const offerTotal = items.reduce((sum, item) => sum + (Number(item.offerValue) || 0), 0);
+      return { currentTotal, offerTotal };
+    }
+
+    /**
+     * Formata um número como moeda brasileira.
+     * @param {number} value
+     * @returns {string} Ex: "R$ 1.234,56"
+     */
+    function formatCurrency(value) {
+      return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    // ===== Input Validation =====
+
+    /**
+     * Filtra caracteres não numéricos de uma string de entrada.
+     * Mantém apenas dígitos, vírgula e ponto (para decimais).
+     * @param {string} rawInput
+     * @returns {string} Apenas os caracteres numéricos válidos.
+     */
+    function sanitizeNumericInput(rawInput) {
+      if (typeof rawInput !== 'string') return '';
+      return rawInput.replace(/[^0-9.,]/g, '');
+    }
+
+    /**
+     * Converte string sanitizada para número.
+     * Trata formato brasileiro (vírgula como separador decimal).
+     * Retorna 0 se a string for vazia ou inválida.
+     * @param {string} sanitized
+     * @returns {number}
+     */
+    function parseNumericValue(sanitized) {
+      if (typeof sanitized !== 'string' || sanitized.trim() === '') return 0;
+
+      // Formato brasileiro: pontos são separadores de milhar, vírgula é decimal
+      // Ex: "1.234,56" → 1234.56
+      // Se há vírgula, assume formato BR: remove pontos (milhar) e troca vírgula por ponto
+      let normalized = sanitized;
+      if (normalized.indexOf(',') !== -1) {
+        normalized = normalized.replace(/\./g, '');
+        normalized = normalized.replace(',', '.');
+      }
+
+      const value = parseFloat(normalized);
+      if (isNaN(value) || value < 0) return 0;
+      return value;
+    }
+
+    // ===== Custom Item Management =====
+
+    /**
+     * Adiciona um novo item personalizado ao modelo.
+     * @param {CompensationItem[]} items
+     * @returns {CompensationItem[]} Nova lista com o item adicionado.
+     */
+    function addCustomItem(items) {
+      const newItem = {
+        id: `custom-${Date.now()}`,
+        name: '',
+        currentValue: 0,
+        offerValue: 0,
+        isPredefined: false,
+      };
+      return [...items, newItem];
+    }
+
+    /**
+     * Remove um item personalizado pelo ID.
+     * Itens pré-definidos não podem ser removidos.
+     * @param {CompensationItem[]} items
+     * @param {string} itemId
+     * @returns {CompensationItem[]} Nova lista sem o item removido.
+     */
+    function removeCustomItem(items, itemId) {
+      return items.filter(item => item.id !== itemId || item.isPredefined);
+    }
+
+    // ===== Rendering =====
+
+    /**
+     * Renderiza todos os itens de compensação na tabela.
+     * Cada item gera uma linha com: rótulo, input "atual", input "proposta", [botão remover].
+     * @param {CompensationItem[]} items
+     * @param {HTMLElement} container
+     */
+    function renderItems(items, container) {
+      container.innerHTML = '';
+
+      items.forEach(item => {
+        const tr = document.createElement('tr');
+
+        // TD 1: Item name
+        const tdName = document.createElement('td');
+        if (item.isPredefined) {
+          const span = document.createElement('span');
+          span.textContent = item.name;
+          tdName.appendChild(span);
+        } else {
+          const nameInput = document.createElement('input');
+          nameInput.type = 'text';
+          nameInput.className = 'item-name-input';
+          nameInput.value = item.name;
+          nameInput.placeholder = 'Nome do item';
+          nameInput.setAttribute('data-item-id', item.id);
+          tdName.appendChild(nameInput);
+        }
+        tr.appendChild(tdName);
+
+        // TD 2: Emprego Atual
+        const tdCurrent = document.createElement('td');
+        const currentInput = document.createElement('input');
+        currentInput.type = 'text';
+        currentInput.value = item.currentValue === 0 ? '' : String(item.currentValue);
+        currentInput.setAttribute('data-item-id', item.id);
+        currentInput.setAttribute('data-column', 'current');
+        tdCurrent.appendChild(currentInput);
+        tr.appendChild(tdCurrent);
+
+        // TD 3: Proposta
+        const tdOffer = document.createElement('td');
+        const offerInput = document.createElement('input');
+        offerInput.type = 'text';
+        offerInput.value = item.offerValue === 0 ? '' : String(item.offerValue);
+        offerInput.setAttribute('data-item-id', item.id);
+        offerInput.setAttribute('data-column', 'offer');
+        tdOffer.appendChild(offerInput);
+        tr.appendChild(tdOffer);
+
+        // TD 4: Action (remove button for custom items)
+        const tdAction = document.createElement('td');
+        if (!item.isPredefined) {
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'btn-remove';
+          removeBtn.setAttribute('data-item-id', item.id);
+          removeBtn.textContent = '✕';
+          tdAction.appendChild(removeBtn);
+        }
+        tr.appendChild(tdAction);
+
+        container.appendChild(tr);
+      });
+    }
+
+    // ===== Event Listeners =====
+
+    /**
+     * Atualiza os totais exibidos na interface.
+     * Calcula a soma de todos os valores e formata como moeda brasileira.
+     */
+    function updateTotals() {
+      const { currentTotal, offerTotal } = calculateTotals(state);
+      document.getElementById('total-current').textContent = formatCurrency(currentTotal);
+      document.getElementById('total-offer').textContent = formatCurrency(offerTotal);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const container = document.getElementById('items-container');
+
+      // Renderização inicial
+      renderItems(state, container);
+      updateTotals();
+
+      // Event delegation: input events no container de itens
+      container.addEventListener('input', (e) => {
+        const target = e.target;
+        const itemId = target.getAttribute('data-item-id');
+
+        if (target.getAttribute('data-column')) {
+          // Campo de valor numérico
+          const sanitized = sanitizeNumericInput(target.value);
+          target.value = sanitized;
+
+          const item = state.find(i => i.id === itemId);
+          if (item) {
+            const parsedValue = parseNumericValue(sanitized);
+            const column = target.getAttribute('data-column');
+            if (column === 'current') {
+              item.currentValue = parsedValue;
+            } else if (column === 'offer') {
+              item.offerValue = parsedValue;
+            }
+            updateTotals();
+          }
+        } else if (target.classList.contains('item-name-input')) {
+          // Campo de nome de item personalizado
+          const item = state.find(i => i.id === itemId);
+          if (item) {
+            item.name = target.value;
+          }
+        }
+      });
+
+      // Event delegation: click events no container de itens (remoção)
+      container.addEventListener('click', (e) => {
+        const target = e.target;
+        if (target.classList.contains('btn-remove')) {
+          const itemId = target.getAttribute('data-item-id');
+          state = removeCustomItem(state, itemId);
+          renderItems(state, container);
+          updateTotals();
+        }
+      });
+
+      // Click handler: adicionar item
+      document.getElementById('add-item-btn').addEventListener('click', () => {
+        state = addCustomItem(state);
+        renderItems(state, container);
+        updateTotals();
+      });
+    });
+  </script>
+</body>
+</html>
