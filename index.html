@@ -140,6 +140,50 @@
       color: #2c3e50;
     }
 
+    .annual-row {
+      background-color: #eaf2e8;
+    }
+
+    .annual-row td {
+      padding: 14px 16px;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .annual-row td:nth-child(2),
+    .annual-row td:nth-child(3) {
+      text-align: right;
+      color: #27ae60;
+    }
+
+    .diff-row {
+      background-color: #f0f4ff;
+      border-top: 1px solid #bdc3c7;
+    }
+
+    .diff-row td {
+      padding: 14px 16px;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .diff-row td:nth-child(2),
+    .diff-row td:nth-child(3) {
+      text-align: right;
+    }
+
+    .diff-positive {
+      color: #27ae60;
+    }
+
+    .diff-negative {
+      color: #e74c3c;
+    }
+
+    .diff-neutral {
+      color: #7f8c8d;
+    }
+
     .add-item-section {
       padding: 16px;
       text-align: center;
@@ -210,9 +254,21 @@
       </tbody>
       <tfoot>
         <tr class="totals-row">
-          <td>TOTAL</td>
+          <td>TOTAL MENSAL</td>
           <td><span id="total-current">R$ 0,00</span></td>
           <td><span id="total-offer">R$ 0,00</span></td>
+          <td></td>
+        </tr>
+        <tr class="annual-row">
+          <td>TOTAL ANUAL</td>
+          <td><span id="annual-current">R$ 0,00</span></td>
+          <td><span id="annual-offer">R$ 0,00</span></td>
+          <td></td>
+        </tr>
+        <tr class="diff-row">
+          <td>DIFERENÇA (Proposta − Atual)</td>
+          <td>Mensal: <span id="diff-monthly">R$ 0,00</span></td>
+          <td>Anual: <span id="diff-annual">R$ 0,00</span></td>
           <td></td>
         </tr>
       </tfoot>
@@ -415,6 +471,24 @@
       const { currentTotal, offerTotal } = calculateTotals(state);
       document.getElementById('total-current').textContent = formatCurrency(currentTotal);
       document.getElementById('total-offer').textContent = formatCurrency(offerTotal);
+      document.getElementById('annual-current').textContent = formatCurrency(currentTotal * 12);
+      document.getElementById('annual-offer').textContent = formatCurrency(offerTotal * 12);
+
+      // Diferença (Proposta - Atual)
+      const diffMonthly = offerTotal - currentTotal;
+      const diffAnnual = diffMonthly * 12;
+
+      const diffMonthlyEl = document.getElementById('diff-monthly');
+      const diffAnnualEl = document.getElementById('diff-annual');
+
+      const formatDiff = (value) => (value >= 0 ? '+' : '') + formatCurrency(value);
+      const getDiffClass = (value) => value > 0 ? 'diff-positive' : value < 0 ? 'diff-negative' : 'diff-neutral';
+
+      diffMonthlyEl.textContent = formatDiff(diffMonthly);
+      diffMonthlyEl.className = getDiffClass(diffMonthly);
+
+      diffAnnualEl.textContent = formatDiff(diffAnnual);
+      diffAnnualEl.className = getDiffClass(diffAnnual);
     }
 
     document.addEventListener('DOMContentLoaded', () => {
